@@ -111,6 +111,8 @@ function sendMessage() {
         ws.send(text.replace(/<br>/g, '\n')); // 發送純文字訊息到伺服器
     }
 
+    saveChatHistory('user', text.replace(/<br>/g, '\n'), time); // 儲存使用者訊息
+
     // 模擬接收回覆訊息
     // setTimeout(() => {
     //     receiveMessage("これは自動返信メッセージです。");
@@ -140,6 +142,8 @@ function receiveMessage(text) {
 
     chatBody.appendChild(msgDiv); // 將訊息加入聊天視窗
     chatBody.scrollTop = chatBody.scrollHeight; // 自動滾動到底部
+
+    saveChatHistory('outcome', text.replace(/<br>/g, '\n'), time); // 儲存接收訊息
 }
 
 function getCurrentTime() {
@@ -161,3 +165,57 @@ function iconClick() {
     alert("アイコンがクリックされました！");
 }
 
+// 儲存聊天紀錄
+let chatHistory = [];
+
+function saveChatHistory(role, textContent, timestamp) {
+    chatHistory.push({ role, textContent, timestamp});
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+}
+
+function loadChatHistory() {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+        chatHistory = JSON.parse(savedHistory);
+        chatHistory.forEach(entry => {
+            if (entry.role === 'user') {
+                const msgDiv = document.createElement("div");
+                msgDiv.className = "outgoing-chats";
+                msgDiv.innerHTML = `
+                    <div class="outgoing-chats-img">
+                        <img src="test_icon1.png">
+                    </div>
+
+                    <div class="outgoing-msg">
+                        <div class="outgoing-msg-inbox">
+                            <p>${entry.textContent}</p>
+                            <span class="time">${entry.timestamp}</span>
+                        </div>
+                    </div>
+                `;
+                chatBody.appendChild(msgDiv); // 將訊息加入聊天視窗
+            }
+            else {
+                const msgDiv = document.createElement("div");
+                msgDiv.className = "received-chats";
+                msgDiv.innerHTML = `
+                    <div class="received-chats-img">
+                        <img src="test_icon2.png">
+                    </div>
+
+                    <div class="received-msg">
+                        <div class="received-msg-inbox">
+                            <p>${entry.textContent}</p>
+                            <span class="time">${entry.timestamp}</span>
+                        </div>
+                    </div>
+                `;
+                chatBody.appendChild(msgDiv); // 將訊息加入聊天視窗
+            }
+        });
+    }
+
+    chatBody.scrollTop = chatBody.scrollHeight; // 自動滾動到底部
+}
+
+loadChatHistory(); // 頁面載入時讀取聊天紀錄
